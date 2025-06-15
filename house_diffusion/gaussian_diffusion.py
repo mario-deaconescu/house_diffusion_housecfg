@@ -15,6 +15,8 @@ from .nn import mean_flat
 from .losses import normal_kl, discretized_gaussian_log_likelihood
 from tqdm.auto import tqdm
 
+from . import dist_util
+
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
     """
@@ -864,7 +866,7 @@ class GaussianDiffusion:
                 bin_target = bin_target * 256 #-> [0, 256]
                 bin_target = dec2bin(bin_target.permute([0,2,1]).round().int(), 8) 
                 bin_target = bin_target.reshape([target.shape[0], target.shape[2], 16]).permute([0,2,1])
-                t_weights = (t<10).cuda().unsqueeze(1).unsqueeze(2)
+                t_weights = (t<10).to(dist_util.dev()).unsqueeze(1).unsqueeze(2)
                 t_weights = t_weights * (t_weights.shape[0]/max(1, t_weights.sum()))
                 bin_target[bin_target==0] = -1
                 assert model_output_bin.shape == bin_target.shape
@@ -973,7 +975,7 @@ def _extract_into_tensor(arr, timesteps, broadcast_shape):
                             dimension equal to the length of timesteps.
     :return: a tensor of shape [batch_size, 1, ...] where the shape has K dims.
     """
-    res = th.from_numpy(arr).to(device=timesteps.device)[timesteps].float()
+    res = th.from_numpy(arr).float().to(device=timesteps.device)[timesteps].float()
     while len(res.shape) < len(broadcast_shape):
         res = res[..., None]
     return res.expand(broadcast_shape)

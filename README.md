@@ -1,3 +1,7 @@
+This repo is intended to be used as a submodule for [HouseCFG](https://github.com/mario-deaconescu/HouseCFG). Some scripts may not work if used independently.
+
+---
+
 # HouseDiffusion
 **[HouseDiffusion: Vector Floorplan Generation via a Diffusion Model with Discrete and Continuous Denoising](https://arxiv.org/abs/2211.13287)**
 <img src='figs/teaser.png' width=100%>

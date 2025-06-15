@@ -49,6 +49,8 @@ def dev():
     """
     if th.cuda.is_available():
         return th.device(f"cuda")
+    if th.backends.mps.is_available():
+        return th.device("mps")
     return th.device("cpu")
 
 

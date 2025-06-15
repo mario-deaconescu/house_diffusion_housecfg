@@ -83,9 +83,9 @@ def make_non_manhattan(poly, polygon, house_poly):
 get_bin = lambda x, z: [int(y) for y in format(x, 'b').zfill(z)]
 get_one_hot = lambda x, z: np.eye(z)[x]
 class RPlanhgDataset(Dataset):
-    def __init__(self, set_name, analog_bit, target_set, non_manhattan=False):
+    def __init__(self, set_name, analog_bit, target_set, non_manhattan=False, base_dir='data/rplan'):
         super().__init__()
-        base_dir = '../datasets/rplan'
+        base_dir = base_dir
         self.non_manhattan = non_manhattan
         self.set_name = set_name
         self.analog_bit = analog_bit
@@ -114,7 +114,7 @@ class RPlanhgDataset(Dataset):
                 self.syn_self_masks = data['self_masks']
                 self.syn_gen_masks = data['gen_masks']
         else:
-            with open(f'{base_dir}/list.txt') as f:
+            with open(os.path.join(base_dir, 'list.txt')) as f:
                 lines = f.readlines()
             cnt=0
             for line in tqdm(lines):
@@ -238,10 +238,17 @@ class RPlanhgDataset(Dataset):
             self.num_coords = 2
             self.graphs = graphs
 
-            np.savez_compressed(f'processed_rplan/rplan_{set_name}_{target_set}', graphs=self.graphs, houses=self.houses,
-                    door_masks=self.door_masks, self_masks=self.self_masks, gen_masks=self.gen_masks)
-            if self.set_name=='train':
-                np.savez_compressed(f'processed_rplan/rplan_{set_name}_{target_set}_cndist', cnumber_dist=cnumber_dist)
+            np.savez_compressed(f'processed_rplan/rplan_{set_name}_{target_set}',
+                                graphs=np.array(self.graphs, dtype=object),
+                                houses=np.array(self.houses, dtype=object),
+                                door_masks=np.array(self.door_masks, dtype=object),
+                                self_masks=np.array(self.self_masks, dtype=object),
+                                gen_masks=np.array(self.gen_masks, dtype=object)
+                                )
+            if self.set_name == 'train':
+                np.savez_compressed(f'processed_rplan/rplan_{set_name}_{target_set}_cndist',
+                                    cnumber_dist=np.array(cnumber_dist, dtype=object)
+                                    )
 
             if set_name=='eval':
                 houses = []
@@ -309,8 +316,13 @@ class RPlanhgDataset(Dataset):
                 self.syn_self_masks = self_masks
                 self.syn_gen_masks = gen_masks
                 self.syn_graphs = graphs
-                np.savez_compressed(f'processed_rplan/rplan_{set_name}_{target_set}_syn', graphs=self.syn_graphs, houses=self.syn_houses,
-                        door_masks=self.syn_door_masks, self_masks=self.syn_self_masks, gen_masks=self.syn_gen_masks)
+                np.savez_compressed(f'processed_rplan/rplan_{set_name}_{target_set}_syn',
+                                    graphs=np.array(self.syn_graphs, dtype=object),
+                                    houses=np.array(self.syn_houses, dtype=object),
+                                    door_masks=np.array(self.syn_door_masks, dtype=object),
+                                    self_masks=np.array(self.syn_self_masks, dtype=object),
+                                    gen_masks=np.array(self.syn_gen_masks, dtype=object)
+                                    )
 
     def __len__(self):
         return len(self.houses)
@@ -468,6 +480,8 @@ class RPlanhgDataset(Dataset):
             # draw rooms
             rm_im = Image.new('L', (im_size, im_size))
             dr = ImageDraw.Draw(rm_im)
+            if len(eds) == 0:
+                continue
             for eds_poly in [eds]:
                 poly = self.make_sequence(np.array([fp_eds[l][:4] for l in eds_poly]))[0]
                 poly = [(im_size*x, im_size*y) for x, y in poly]

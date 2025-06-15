@@ -59,7 +59,7 @@ def model_and_diffusion_defaults():
     Defaults for image training.
     """
     res = dict(
-            dataset='',
+            dataset='rplan',
             use_checkpoint=False,
             input_channels=0,
             condition_channels=0,
